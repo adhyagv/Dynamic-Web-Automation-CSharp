@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/DynamicWebAutomation/DynamicWebAutomation.csproj" />
+  <Project Path="tests/DynamicWebAutomation.Tests/DynamicWebAutomation.Tests.csproj" />
+</Solution>
