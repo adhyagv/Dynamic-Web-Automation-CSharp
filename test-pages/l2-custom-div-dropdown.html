@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Practice Form</title></head>
+<body>
+  <form>
+    <div><label for="given-name">First Name</label><input id="given-name" type="text" name="given"></div>
+    <div>
+      <label>Gender</label>
+      <div>
+        <input type="radio" name="gender-choice" value="m"><span>Male</span>
+        <input type="radio" name="gender-choice" value="f"><span>Female</span>
+        <input type="radio" name="gender-choice" value="x"><span>Transgender</span>
+      </div>
+    </div>
+    <div>
+      <span>State</span>
+      <div role="listbox" aria-label="State">
+        <div role="option" aria-selected="true">-- Select --</div>
+        <div role="option">Karnataka</div>
+        <div role="option">Kerala</div>
+      </div>
+    </div>
+  </form>
+</body>
+</html>

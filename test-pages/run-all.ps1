@@ -16,16 +16,24 @@ if ($dotnetCommand) {
     }
 }
 
-# Fixture expectations live in this runner. Production code receives only the file URL.
-$cases = @(
-    @{ File = 'v1-original.html'; ExpectedExit = 0; FirstName = 'PASS'; Gender = 'PASS'; State = 'PASS' },
-    @{ File = 'v2-changed-identifiers.html'; ExpectedExit = 0; FirstName = 'PASS'; Gender = 'PASS'; State = 'PASS' },
-    @{ File = 'v3-changed-order.html'; ExpectedExit = 0; FirstName = 'PASS'; Gender = 'PASS'; State = 'PASS' },
-    @{ File = 'v4-similar-and-hidden-fields.html'; ExpectedExit = 0; FirstName = 'PASS'; Gender = 'PASS'; State = 'PASS' },
-    @{ File = 'v5-wrapping-labels.html'; ExpectedExit = 0; FirstName = 'PASS'; Gender = 'PASS'; State = 'PASS' },
-    @{ File = 'n1-missing-first-name.html'; ExpectedExit = 1; FirstName = 'FAIL'; Gender = 'PASS'; State = 'PASS' },
-    @{ File = 'n2-ambiguous-first-name.html'; ExpectedExit = 1; FirstName = 'AMBIGUOUS'; Gender = 'NOT_RUN'; State = 'NOT_RUN' }
-)
+# Expectations come from one reviewable table; production receives only the file URL.
+$expectationPath = Join-Path $PSScriptRoot 'expected-results.md'
+$cases = foreach ($line in Get-Content $expectationPath) {
+    if ($line -match '^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|$') {
+        if ($matches[1].Trim() -eq 'Page') { continue }
+        [pscustomobject]@{
+            File = $matches[1].Trim()
+            FirstName = $matches[2].Trim()
+            Gender = $matches[3].Trim()
+            State = $matches[4].Trim()
+            ExpectedExit = [int]$matches[5]
+            Reason = $matches[6].Trim()
+        }
+    }
+}
+if (@($cases).Count -ne 11) {
+    throw "Expected exactly 11 scenario rows in $expectationPath; found $(@($cases).Count)."
+}
 
 $rows = [System.Collections.Generic.List[object]]::new()
 foreach ($case in $cases) {

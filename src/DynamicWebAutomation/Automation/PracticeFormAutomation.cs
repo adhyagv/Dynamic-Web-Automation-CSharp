@@ -199,11 +199,20 @@ public sealed class PracticeFormAutomation
 
         if (plan.OptionMatches.Count == 0)
         {
+            string missingOptionGroupName = plan.Candidate.RadioMembers.FirstOrDefault()?.GetAttribute("name") ?? "(unnamed)";
+            IWebElement? currentlySelected = plan.Candidate.RadioMembers.FirstOrDefault(FieldValidator.IsSelected);
+            string? selectedText = currentlySelected is null
+                ? null
+                : collector.GetRadioOptionTexts(currentlySelected).FirstOrDefault();
             return Complete(CreateResult(
                 plan,
                 FieldStatus.Fail,
                 $"Radio group was detected but option text '{settings.Fields.Gender}' was not found.",
-                null));
+                selectedText,
+                missingOptionGroupName,
+                plan.Candidate.RadioMembers.Count,
+                selectedText,
+                false));
         }
 
         IWebElement option = plan.OptionMatches[0];
