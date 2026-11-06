@@ -4,7 +4,6 @@
 .vs/
 
 # Runtime output
-/reports/
-/screenshots/
+reports/
+screenshots/
 *.screenshot.png
-
