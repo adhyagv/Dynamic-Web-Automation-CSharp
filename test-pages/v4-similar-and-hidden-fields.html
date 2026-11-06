@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Practice Form</title></head>
+<body>
+  <form>
+    <div><label for="primary-given">First Name</label><input id="primary-given" type="text" name="primary"></div>
+    <div><label for="alternate-given">First Name (alternate)</label><input id="alternate-given" type="text" name="alternate"></div>
+    <div style="display:none">
+      <label for="hidden-given">First Name</label><input id="hidden-given" type="text" name="hidden">
+    </div>
+    <div>
+      <label>Gender</label>
+      <div>
+        <input type="radio" name="group-x" value="m"><span>Male</span>
+        <input type="radio" name="group-x" value="f"><span>Female</span>
+        <input type="radio" name="group-x" value="t"><span>Transgender</span>
+      </div>
+    </div>
+    <div><label for="state-x">State</label><select id="state-x" name="region">
+      <option>-- Select --</option><option>Karnataka</option><option>Kerala</option>
+    </select></div>
+  </form>
+</body>
+</html>

@@ -18,6 +18,7 @@ public sealed class AutomationSettings
     public bool Headless { get; set; }
     public bool FailWhenStateOptionMissing { get; set; }
     public int PauseSeconds { get; private set; }
+    public string? ResultsJsonPath { get; private set; }
 
     /// <summary>
     /// Resolves URL precedence and command-line browser options, then validates
@@ -42,6 +43,10 @@ public sealed class AutomationSettings
         catch (JsonException exception)
         {
             throw new ConfigurationException($"Could not read appsettings.json: {exception.Message}");
+        }
+        catch (IOException exception)
+        {
+            throw new ConfigurationException($"Could not access appsettings.json: {exception.Message}");
         }
 
         string? argumentUrl = null;
@@ -73,6 +78,14 @@ public sealed class AutomationSettings
                         index++;
                     }
 
+                    break;
+                case "--results-json":
+                    if (index + 1 >= args.Length || args[index + 1].StartsWith("--", StringComparison.Ordinal))
+                    {
+                        throw new ConfigurationException("--results-json requires a file path.");
+                    }
+
+                    settings.ResultsJsonPath = args[++index];
                     break;
                 default:
                     throw new ConfigurationException($"Unknown argument: {args[index]}");

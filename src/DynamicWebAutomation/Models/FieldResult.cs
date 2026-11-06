@@ -20,7 +20,12 @@ public enum FieldStatus
     /// <summary>
     /// The requested State option was absent, so it was not verified.
     /// </summary>
-    SkippedOptionNotAvailable
+    SkippedOptionNotAvailable,
+
+    /// <summary>
+    /// Preflight ambiguity stopped this field before it could be changed.
+    /// </summary>
+    NotRun
 }
 
 /// <summary>
@@ -36,6 +41,12 @@ public sealed class FieldResult
     public int? RunnerUpScore { get; init; }
     public string? ChoiceReason { get; init; }
     public IReadOnlyList<string> AvailableOptions { get; init; } = [];
+    public string? ExpectedValue { get; init; }
+    public string? ActualValue { get; init; }
+    public string? GroupName { get; init; }
+    public int? RadioOptionCount { get; init; }
+    public string? SelectedOptionText { get; init; }
+    public bool? ReadBackChecked { get; init; }
     public string? ScreenshotPath { get; set; }
     public string? ScreenshotError { get; set; }
 }

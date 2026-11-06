@@ -16,17 +16,24 @@ public static class ConsoleReporter
             FieldStatus.Fail => "FAIL",
             FieldStatus.Ambiguous => "AMBIGUOUS",
             FieldStatus.SkippedOptionNotAvailable => "SKIPPED_OPTION_NOT_AVAILABLE",
+            FieldStatus.NotRun => "NOT_RUN",
             _ => throw new ArgumentOutOfRangeException(nameof(result.Status))
         };
 
         Console.WriteLine($"[{status}] {result.FieldName}: {result.Message}");
+        if (result.FieldName == "Gender" && result.GroupName is not null)
+        {
+            Console.WriteLine(
+                $"[Gender details] group='{result.GroupName}', options={result.RadioOptionCount}, " +
+                $"selected text='{result.SelectedOptionText ?? "(none)"}', checked={result.ReadBackChecked?.ToString() ?? "(not read)"}.");
+        }
     }
 
     public static void PrintSummary(RunSummary summary)
     {
         Console.WriteLine();
         Console.WriteLine(
-            $"Counts: {summary.Passed} passed, {summary.Failed} failed, {summary.Ambiguous} ambiguous, {summary.Skipped} skipped.");
+            $"Counts: {summary.Passed} passed, {summary.Failed} failed, {summary.Ambiguous} ambiguous, {summary.Skipped} skipped, {summary.NotRun} not run.");
         Console.WriteLine(summary.FinalMessage);
     }
 }

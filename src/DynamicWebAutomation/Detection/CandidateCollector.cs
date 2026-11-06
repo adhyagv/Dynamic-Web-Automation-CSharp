@@ -1,4 +1,5 @@
 using System.Text.Json;
+using DynamicWebAutomation.Core;
 using DynamicWebAutomation.Models;
 using OpenQA.Selenium;
 
@@ -13,10 +14,13 @@ public sealed class CandidateCollector(IWebDriver driver)
     private const string EvidenceScript = """
         const el = arguments[0];
         const visible = node => {
-          const style = getComputedStyle(node);
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0 &&
-            style.display !== "none" && style.visibility !== "hidden";
+          for (let current = node; current && current.nodeType === Node.ELEMENT_NODE; current = current.parentElement) {
+            const style = getComputedStyle(current);
+            const rect = current.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0 || style.display === "none" ||
+                style.visibility === "hidden" || style.visibility === "collapse" || Number(style.opacity) <= 0) return false;
+          }
+          return true;
         };
         const texts = nodes => nodes.filter(visible)
           .map(node => (node.innerText || node.textContent || "").trim())
@@ -67,6 +71,23 @@ public sealed class CandidateCollector(IWebDriver driver)
         });
         """;
 
+    private const string VisibilityScript = """
+        const el = arguments[0];
+        const nodes = [];
+        for (let node = el; node && node.nodeType === Node.ELEMENT_NODE; node = node.parentElement) {
+          const style = getComputedStyle(node);
+          const rect = node.getBoundingClientRect();
+          nodes.push({
+            Display: style.display,
+            Visibility: style.visibility,
+            Opacity: Number(style.opacity),
+            Width: rect.width,
+            Height: rect.height
+          });
+        }
+        return JSON.stringify(nodes);
+        """;
+
     private const string RadioGroupKeyScript = """
         const el = arguments[0];
         const semanticGroup = el.closest('fieldset, [role="radiogroup"]');
@@ -90,17 +111,19 @@ public sealed class CandidateCollector(IWebDriver driver)
     private const string OptionTextScript = """
         const el = arguments[0];
         const visible = node => {
-          const style = getComputedStyle(node);
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0 &&
-            style.display !== "none" && style.visibility !== "hidden";
+          for (let current = node; current && current.nodeType === Node.ELEMENT_NODE; current = current.parentElement) {
+            const style = getComputedStyle(current);
+            const rect = current.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0 || style.display === "none" ||
+                style.visibility === "hidden" || style.visibility === "collapse" || Number(style.opacity) <= 0) return false;
+          }
+          return true;
         };
         const result = [];
         const add = text => {
           const value = (text || "").replace(/\s+/g, " ").trim();
           if (value && !result.includes(value)) result.push(value);
         };
-        for (const label of (el.labels || [])) if (visible(label)) add(label.innerText || label.textContent);
         for (const label of (el.labels || [])) if (visible(label)) add(label.innerText || label.textContent);
         for (const direction of [1, -1]) {
           let sibling = direction > 0 ? el.nextSibling : el.previousSibling;
@@ -133,7 +156,7 @@ public sealed class CandidateCollector(IWebDriver driver)
         };
 
         return elements
-            .Where(IsVisible)
+            .Where(element => PageVisibilityChecker.IsVisible(ReadVisibility(element)))
             .Select(element => new PageCandidate(ReadEvidence(element, controlType), element, []))
             .ToArray();
     }
@@ -146,7 +169,7 @@ public sealed class CandidateCollector(IWebDriver driver)
     {
         IWebElement[] radios = driver.FindElements(By.TagName("input"))
             .Where(element => string.Equals(element.GetAttribute("type"), "radio", StringComparison.OrdinalIgnoreCase))
-            .Where(IsVisible)
+            .Where(element => PageVisibilityChecker.IsVisible(ReadVisibility(element)))
             .ToArray();
 
         return radios
@@ -195,7 +218,14 @@ public sealed class CandidateCollector(IWebDriver driver)
             ReadStrings(root, "weakHints").Concat([placeholder]).Where(value => !string.IsNullOrWhiteSpace(value)).ToArray());
     }
 
-    private static bool IsVisible(IWebElement element) => element.Displayed;
+    private IReadOnlyList<VisibilityNode> ReadVisibility(IWebElement element)
+    {
+        string json = Convert.ToString(((IJavaScriptExecutor)driver).ExecuteScript(VisibilityScript, element))
+            ?? throw new InvalidOperationException("The browser did not return visibility information.");
+
+        return JsonSerializer.Deserialize<VisibilityNode[]>(json)
+            ?? throw new InvalidOperationException("The browser returned invalid visibility information.");
+    }
 
     private static string ReadString(JsonElement root, string name) =>
         root.TryGetProperty(name, out JsonElement value) ? value.GetString() ?? "" : "";
