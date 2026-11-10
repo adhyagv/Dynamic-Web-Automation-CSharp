@@ -3,6 +3,11 @@
 **/obj/
 .vs/
 
+# Local secrets
+.env
+.env.*
+!.env.example
+
 # Runtime output
 reports/
 screenshots/

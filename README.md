@@ -177,6 +177,14 @@ Run the 11 local integration scenarios from the project root:
 
 The runner reads expected outcomes from `test-pages/expected-results.md`. Expected application exits of 1 count as a successful negative-scenario test only if field statuses match and the JSON has no `executionError`.
 
+## GitHub Actions and local Application Control
+
+The workflow at `.github/workflows/dotnet.yml` runs on pushes, pull requests, and manual dispatch. It uses a GitHub-hosted Windows runner to restore, build the full solution in Release mode, and run the complete xUnit suite. The solution includes both the console application and its test project.
+
+To review a CI run, open the repository's **Actions** tab, select the **.NET** workflow, and open the run and its `build-and-test` job. The build output and xUnit test summary are shown in the job logs. A successful CI run verifies execution on that hosted runner; it does not change local Windows security settings or prove that this computer permits the same generated binaries to execute.
+
+Windows Smart App Control or another Windows Application Control policy can block unsigned locally generated development DLLs or executables. In this environment, the test runner reported error `0x800711C7` while trying to load the test assembly. That can happen after compilation succeeds and is distinct from a test assertion failure. Keep the security policy enabled; use the hosted workflow results or ask the device administrator to review the local policy rather than bypassing it.
+
 Verified local results:
 
 | Page | First Name | Gender | State | Exit | Result |
